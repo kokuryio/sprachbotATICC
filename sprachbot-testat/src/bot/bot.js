@@ -73,7 +73,7 @@ class EchoBot extends ActivityHandler {
                 break;
 
             default:
-                await sendVoiceReply(messages.internalError);
+                await sendVoiceReply(context, messages.internalError);
                 this.askForInformation(context);
                 break;
         }
@@ -87,7 +87,7 @@ class EchoBot extends ActivityHandler {
      */
     async processInformation(entities, context) {
         if (this.state !== "awaitingInformation") {
-            await sendVoiceReply(messages.clarifyConfirmation);
+            await sendVoiceReply(context, messages.clarifyConfirmation);
             return;
         }
         await this.verifyInput(entities, context);
@@ -111,12 +111,12 @@ class EchoBot extends ActivityHandler {
         if (confirmed) {
             saveUserInput(this.currentInput, this.requiredInformation[0], this.user);
             this.requiredInformation.shift();
-            await sendVoiceReply(messages.confirmSave);
+            await sendVoiceReply(context, messages.confirmSave);
             await this.askForInformation(context);
         } else if (rejected) {
             await this.askForInformation(context);
         } else {
-            await sendVoiceReply(messages.clarifyConfirmation);
+            await sendVoiceReply(context, messages.clarifyConfirmation);
         }
     }
 
@@ -139,7 +139,7 @@ class EchoBot extends ActivityHandler {
         this.currentInput = entityValue;
         this.state = "awaitingConfirmation";
 
-        await sendVoiceReply(messages.repeatInput(entityValue, currentInformation));
+        await sendVoiceReply(context, messages.repeatInput(entityValue, currentInformation));
     }
 
     /**
@@ -149,14 +149,14 @@ class EchoBot extends ActivityHandler {
      */
     async askForInformation(context) {
         if (this.requiredInformation.length === 0) {
-            await sendVoiceReply(messages.endOfProcess);
+            await sendVoiceReply(context, messages.endOfProcess);
             createUser(this.user);
             return;
         }
 
         const currentInformation = this.requiredInformation[0];
         this.state = "awaitingInformation";
-        await sendVoiceReply(messages.askForInformation(currentInformation));
+        await sendVoiceReply(context, messages.askForInformation(currentInformation));
     }
 }
 
