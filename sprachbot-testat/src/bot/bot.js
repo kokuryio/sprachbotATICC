@@ -1,6 +1,7 @@
 const { ActivityHandler, MessageFactory } = require('botbuilder');
 const messages = require('./botMessages');
 const UserTO = require('../data/UserTO');
+const { sendVoiceReply } = require('./ttsHelper');
 
 /**
  * Contains the bot's conversational logic.
@@ -45,7 +46,7 @@ class EchoBot extends ActivityHandler {
             for (const member of context.activity.membersAdded) {
                 if (member.id !== context.activity.recipient.id) {
                     this.user = new UserTO();
-                    await context.sendActivity(messages.welcomeMsg);
+                    await sendVoiceReply(context, messages.welcomeMsg);
                     await this.askForInformation(context);
                 
                 }
@@ -72,7 +73,7 @@ class EchoBot extends ActivityHandler {
                 break;
 
             default:
-                await context.sendActivity(messages.internalError);
+                await sendVoiceReply(messages.internalError);
                 this.askForInformation(context);
                 break;
         }
@@ -86,7 +87,7 @@ class EchoBot extends ActivityHandler {
      */
     async processInformation(entities, context) {
         if (this.state !== "awaitingInformation") {
-            await context.sendActivity(messages.clarifyConfirmation);
+            await sendVoiceReply(messages.clarifyConfirmation);
             return;
         }
         await this.verifyInput(entities, context);
@@ -110,12 +111,12 @@ class EchoBot extends ActivityHandler {
         if (confirmed) {
             saveUserInput(this.currentInput, this.requiredInformation[0], this.user);
             this.requiredInformation.shift();
-            await context.sendActivity(messages.confirmSave);
+            await sendVoiceReply(messages.confirmSave);
             await this.askForInformation(context);
         } else if (rejected) {
             await this.askForInformation(context);
         } else {
-            await context.sendActivity(messages.clarifyConfirmation);
+            await sendVoiceReply(messages.clarifyConfirmation);
         }
     }
 
@@ -138,7 +139,7 @@ class EchoBot extends ActivityHandler {
         this.currentInput = entityValue;
         this.state = "awaitingConfirmation";
 
-        await context.sendActivity(messages.repeatInput(entityValue, currentInformation));
+        await sendVoiceReply(messages.repeatInput(entityValue, currentInformation));
     }
 
     /**
@@ -148,14 +149,14 @@ class EchoBot extends ActivityHandler {
      */
     async askForInformation(context) {
         if (this.requiredInformation.length === 0) {
-            await context.sendActivity(messages.endOfProcess);
+            await sendVoiceReply(messages.endOfProcess);
             createUser(this.user);
             return;
         }
 
         const currentInformation = this.requiredInformation[0];
         this.state = "awaitingInformation";
-        await context.sendActivity(messages.askForInformation(currentInformation));
+        await sendVoiceReply(messages.askForInformation(currentInformation));
     }
 }
 
