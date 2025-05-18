@@ -19,10 +19,10 @@ const {
 } = require('botbuilder');
 
 // This bot's main dialog.
-const { EchoBot } = require('./bot');
+const { EchoBot } = require('./bot/bot');
 
 //Creates CLU client
-const { createCLUClient } = require('./cluHelper');
+const { createCLUClient } = require('./bot/cluHelper');
 
 
 // Create HTTP server

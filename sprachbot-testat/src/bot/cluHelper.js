@@ -1,4 +1,4 @@
-const { ConversationAnalysisClient } = require("@azure/ai-language-conversations"); // changed here
+const { ConversationAnalysisClient } = require("@azure/ai-language-conversations");
 const { AzureKeyCredential } = require("@azure/core-auth");
 const { DefaultAzureCredential } = require('@azure/identity');
 const { SecretClient } = require('@azure/keyvault-secrets');
@@ -20,7 +20,7 @@ async function createCLUClient() {
     const secret = await client.getSecret("cluSecret");
     const cluKey = secret.value;
 
-    return new ConversationAnalysisClient(  // changed here
+    return new ConversationAnalysisClient( 
         cluEndpoint,
         new AzureKeyCredential(cluKey)
     );
