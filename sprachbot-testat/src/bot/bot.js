@@ -2,6 +2,8 @@ const { ActivityHandler, MessageFactory } = require('botbuilder');
 const messages = require('./botMessages');
 const UserTO = require('../data/UserTO');
 const { sendVoiceReply } = require('./ttsHelper');
+const botMessages = require('./botMessages');
+const { handleIncomingAudioAttachment } = require('./sttHelper');
 
 /**
  * Contains the bot's conversational logic.
@@ -15,7 +17,22 @@ class EchoBot extends ActivityHandler {
         this.currentInput = null;
 
         this.onMessage(async (context, next) => {
-            const text = context.activity.text;
+            if (context.activity.attachments && context.activity.attachments.length > 0) {
+                const audioAttachment = context.activity.attachments[0];
+
+            if (audioAttachment.contentType === 'audio/wav') {
+                try {
+                    var text = await handleIncomingAudioAttachment(audioAttachment.contentUrl);
+                } catch (err) {
+                    console.error(err);
+                    await sendVoiceReply(context, botMessages.voiceTranscriptionError);
+                }
+            } else {
+                await sendVoiceReply(context, botMessages.wrongAudioFormat);
+            }
+        }
+            
+            text = context.activity.text;
 
             const result = await this.cluClient.analyzeConversation({
                 kind: "Conversation",

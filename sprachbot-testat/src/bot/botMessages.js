@@ -12,6 +12,8 @@ module.exports ={
     clarifyConfirmation: "Bitte antworten Sie mit Ja oder Nein.",
     confirmSave: "Vielen Dank, Ihre Angabe wurde gespeichert.",
     internalError: "Das habe Ich leider nicht verstanden. ",
-    endOfProcess: "Vielen Dank, Ihr Account wurde erstellt."
+    endOfProcess: "Vielen Dank, Ihr Account wurde erstellt.",
+    voiceTranscriptionError: "Fehler bei der Spracherkennung",
+    wrongAudioFormat: 'Bitte senden Sie eine Audiodatei im WAV-Format.'
 };
 
