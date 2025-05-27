@@ -35,8 +35,6 @@ server.listen(process.env.port || process.env.PORT || 3978, () => {
     console.log('\nTo talk to your bot, open the emulator select "Open Bot"');
 });
 
-console.log('App ID:', process.env.MicrosoftAppId);
-
 const credentialsFactory = new ConfigurationServiceClientCredentialFactory({
     MicrosoftAppId: process.env.MicrosoftAppId,
     MicrosoftAppPassword: process.env.MicrosoftAppPassword,
@@ -53,6 +51,9 @@ const adapter = new CloudAdapter(botFrameworkAuthentication);
 const onTurnErrorHandler = async (context, error) => {
     // This check writes out errors to console log .vs. app insights.
     console.error(`\n [onTurnError] unhandled error: ${ error }`);
+    if (error.stack) {
+        console.error('[onTurnError] stack trace:', error.stack);
+  }
 
     // Send a trace activity, which will be displayed in Bot Framework Emulator
     await context.sendTraceActivity(
