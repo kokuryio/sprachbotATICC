@@ -7,6 +7,7 @@ const { SecretClient } = require('@azure/keyvault-secrets');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const os = require('os');
+const { MessageFactory } = require('botbuilder');
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 
@@ -111,7 +112,7 @@ async function transcribeSpeechFromFile(filePath) {
  * @param filename Name of the file where the input should be saved to
  * @returns The content of the audio file as text
  */
-async function handleIncomingAudioAttachment(attachmentUrl, filename = 'user-input.wav') {
+async function handleIncomingAudioAttachment(context, attachmentUrl, filename = 'user-input.wav') {
     const tempPath = path.resolve(__dirname, filename);
     await downloadAudioFile(attachmentUrl, tempPath);
 
@@ -119,9 +120,32 @@ async function handleIncomingAudioAttachment(attachmentUrl, filename = 'user-inp
         tempPath = await convertToWav(tempPath);
     }
 
+    sendAudioBackToUser(context, tempPath);
     const transcribedText = await transcribeSpeechFromFile(tempPath);
     fs.unlinkSync(tempPath); // Cleanup
     return transcribedText;
 }
+
+/**
+ * Only for debug purposes
+ * Sends back the audio file to the user to verify its integrity.
+ * @param {*} context Bot TurnContext
+ * @param {*} filePath Local path to the WAV file to send back
+ * @param {*} message Optional message to display alongside the audio
+ */
+async function sendAudioBackToUser(context, filePath, message = 'Hier ist die Audioaufnahme, die ich empfangen habe:') {
+    const fileName = path.basename(filePath);
+    const fileContent = fs.readFileSync(filePath);
+
+    const audioAttachment = {
+        name: fileName,
+        contentType: 'audio/wav',
+        contentUrl: `data:audio/wav;base64,${fileContent.toString('base64')}`
+    };
+
+    const reply = MessageFactory.attachment(audioAttachment, message);
+    await context.sendActivity(reply);
+}
+
 
 module.exports = { handleIncomingAudioAttachment };

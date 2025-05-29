@@ -28,7 +28,7 @@ class EchoBot extends ActivityHandler {
                     );
 
                 try {
-                    var text = await handleIncomingAudioAttachment(audioAttachment.contentUrl);
+                    var text = await handleIncomingAudioAttachment(context, audioAttachment.contentUrl);
                 } catch (err) {
                     console.error(err);
                     await sendVoiceReply(context, botMessages.voiceTranscriptionError);
