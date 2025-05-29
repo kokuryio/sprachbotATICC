@@ -20,6 +20,8 @@ class EchoBot extends ActivityHandler {
         this.currentInput = null;
 
         this.onMessage(async (context, next) => {
+
+            //Process audio attachements
             if (context.activity.attachments && context.activity.attachments.length > 0) {
                 const audioAttachment = context.activity.attachments.find(att =>
                     SUPPORTED_AUDIO_TYPES.includes(att.contentType)
@@ -31,9 +33,10 @@ class EchoBot extends ActivityHandler {
                     console.error(err);
                     await sendVoiceReply(context, botMessages.voiceTranscriptionError);
                 }
+        }else{
+                text = context.activity.text;
         }
             
-            text = context.activity.text;
 
             const result = await this.cluClient.analyzeConversation({
                 kind: "Conversation",
@@ -60,6 +63,7 @@ class EchoBot extends ActivityHandler {
             await next();
         });
 
+        //Send welcome text/voice messages
         this.onMembersAdded(async (context, next) => {
             for (const member of context.activity.membersAdded) {
                 if (member.id !== context.activity.recipient.id) {
