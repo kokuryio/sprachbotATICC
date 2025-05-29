@@ -90,9 +90,18 @@ async function transcribeSpeechFromFile(filePath) {
             if (result.reason === sdk.ResultReason.RecognizedSpeech) {
                 resolve(result.text);
             } else {
-                reject(new Error('Speech recognition failed: ' + result.errorDetails));
-            }
-        }, error => reject(error));
+                console.error('[SpeechRecognizer] Recognition failed:', {
+                reason: result.reason,
+                text: result.text,
+                errorDetails: result.errorDetails,
+                result
+                });
+                reject(new Error(`Speech recognition failed. Reason: ${sdk.ResultReason[result.reason]}`));
+        }
+        }, error => {
+            console.error('[SpeechRecognizer] Fatal error:', error);
+            reject(error);
+            });
     });
 }
 
