@@ -7,7 +7,6 @@ const { SecretClient } = require('@azure/keyvault-secrets');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const os = require('os');
-const { MessageFactory } = require('botbuilder');
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 
@@ -120,7 +119,6 @@ async function handleIncomingAudioAttachment(attachmentUrl, filename = 'user-inp
         tempPath = await convertToWav(tempPath);
     }
 
-    sendAudioBackToUser(context, tempPath);
     const transcribedText = await transcribeSpeechFromFile(tempPath);
     fs.unlinkSync(tempPath);
     return transcribedText;
