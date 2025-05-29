@@ -79,9 +79,9 @@ async function transcribeSpeechFromFile(filePath) {
     pushStream.close();
 
     const audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
+    const speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, region);
     const recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
 
-    const speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, region);
     speechConfig.speechRecognitionLanguage = 'de-DE';
 
 
