@@ -6,9 +6,7 @@ const { DefaultAzureCredential } = require('@azure/identity');
 const { SecretClient } = require('@azure/keyvault-secrets');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
-const path = require('path');
 const os = require('os');
-const fs = require('fs');
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 
