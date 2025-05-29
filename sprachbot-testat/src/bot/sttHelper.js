@@ -37,7 +37,11 @@ async function retrieveSpeechKey() {
  */
 async function downloadAudioFile(url, localPath) {
     const response = await axios.get(url, { responseType: 'arraybuffer' });
+    console.log("Response to download")
+    console.log(response)
     fs.writeFileSync(localPath, response.data);
+    console.log("Local path")
+    console.log(localPath)
     return localPath;
 }
 
@@ -93,11 +97,15 @@ async function transcribeSpeechFromFile(filePath) {
  */
 async function handleIncomingAudioAttachment(attachmentUrl, filename = 'user-input.wav') {
     const tempPath = path.resolve(__dirname, filename);
+    console.log("First tempPath")
+    console.log(tempPath)
     await downloadAudioFile(attachmentUrl, tempPath);
 
     if (path.extname(filePath).toLowerCase() !== '.wav') {
         tempPath = await convertToWav(tempPath);
     }
+    console.log("After conversion")
+    console.log(tempPath);
 
     const transcribedText = await transcribeSpeechFromFile(tempPath);
     fs.unlinkSync(tempPath); // Cleanup
