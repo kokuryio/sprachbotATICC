@@ -50,12 +50,18 @@ function convertToWav(inputPath) {
     return new Promise((resolve, reject) => {
         const tempWavPath = path.join(os.tmpdir(), `converted-${Date.now()}.wav`);
         ffmpeg(inputPath)
+            .outputOptions([
+                '-acodec pcm_s16le',
+                '-ar 16000',         
+                '-ac 1'              
+            ])
             .toFormat('wav')
             .on('error', reject)
             .on('end', () => resolve(tempWavPath))
             .save(tempWavPath);
     });
 }
+
 
 
 /**
