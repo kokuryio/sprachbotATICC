@@ -120,7 +120,6 @@ async function handleIncomingAudioAttachment(attachmentUrl, filename = 'user-inp
     }
 
     const transcribedText = await transcribeSpeechFromFile(tempPath);
-    fs.unlinkSync(tempPath);
     return transcribedText;
 }
 
