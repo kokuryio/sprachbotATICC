@@ -4,6 +4,13 @@ const axios = require('axios');
 const sdk = require('microsoft-cognitiveservices-speech-sdk');
 const { DefaultAzureCredential } = require('@azure/identity');
 const { SecretClient } = require('@azure/keyvault-secrets');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+
 
 /**
  * Retrieves the Azure Speech key from Key Vault
@@ -35,6 +42,23 @@ async function downloadAudioFile(url, localPath) {
     fs.writeFileSync(localPath, response.data);
     return localPath;
 }
+
+/**
+ * Converts an audio file input to .wav-format for further processing
+ * @param {*} inputPath thepath to the file which to convert to .wav
+ * @returns converted file
+ */
+function convertToWav(inputPath) {
+    return new Promise((resolve, reject) => {
+        const tempWavPath = path.join(os.tmpdir(), `converted-${Date.now()}.wav`);
+        ffmpeg(inputPath)
+            .toFormat('wav')
+            .on('error', reject)
+            .on('end', () => resolve(tempWavPath))
+            .save(tempWavPath);
+    });
+}
+
 
 /**
  * Transcribes an audio file to text
@@ -72,6 +96,11 @@ async function transcribeSpeechFromFile(filePath) {
 async function handleIncomingAudioAttachment(attachmentUrl, filename = 'user-input.wav') {
     const tempPath = path.resolve(__dirname, filename);
     await downloadAudioFile(attachmentUrl, tempPath);
+
+    if (path.extname(filePath).toLowerCase() !== '.wav') {
+        tempPath = await convertToWav(tempPath);
+    }
+
     const transcribedText = await transcribeSpeechFromFile(tempPath);
     fs.unlinkSync(tempPath); // Cleanup
     return transcribedText;

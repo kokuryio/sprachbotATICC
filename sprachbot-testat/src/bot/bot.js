@@ -5,6 +5,9 @@ const { sendVoiceReply } = require('./ttsHelper');
 const botMessages = require('./botMessages');
 const { handleIncomingAudioAttachment } = require('./sttHelper');
 
+//supported audio types for user audio input
+const SUPPORTED_AUDIO_TYPES = ['audio/wav', 'audio/x-wav', 'audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/m4a'];
+
 /**
  * Contains the bot's conversational logic.
  */
@@ -18,18 +21,16 @@ class EchoBot extends ActivityHandler {
 
         this.onMessage(async (context, next) => {
             if (context.activity.attachments && context.activity.attachments.length > 0) {
-                const audioAttachment = context.activity.attachments[0];
+                const audioAttachment = context.activity.attachments.find(att =>
+                    SUPPORTED_AUDIO_TYPES.includes(att.contentType)
+                    );
 
-            if (audioAttachment.contentType === 'audio/wav') {
                 try {
                     var text = await handleIncomingAudioAttachment(audioAttachment.contentUrl);
                 } catch (err) {
                     console.error(err);
                     await sendVoiceReply(context, botMessages.voiceTranscriptionError);
                 }
-            } else {
-                await sendVoiceReply(context, botMessages.wrongAudioFormat);
-            }
         }
             
             text = context.activity.text;
