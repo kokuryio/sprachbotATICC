@@ -75,7 +75,7 @@ async function transcribeSpeechFromFile(filePath) {
     if (!region) throw new Error('Missing SPEECH_REGION');
 
     const pushStream = sdk.AudioInputStream.createPushStream();
-    pushStream.write(fs.readFileSync(convertedWavPath));
+    pushStream.write(fs.readFileSync(filePath));
     pushStream.close();
 
     const audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
