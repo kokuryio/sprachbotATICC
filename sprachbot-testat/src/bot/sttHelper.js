@@ -53,18 +53,20 @@ function convertToWav(inputPath) {
             fs.mkdirSync(outputDir);
         }
         const outputPath = path.join(outputDir, `converted-${Date.now()}.wav`);
+
         ffmpeg(inputPath)
             .outputOptions([
-                '-acodec pcm_s16le',
-                '-ar 16000',
-                '-ac 1'
+                '-f wav',            // ensure correct container
+                '-acodec pcm_s16le', // 16-bit PCM
+                '-ar 16000',         // 16 kHz sample rate
+                '-ac 1'              // mono
             ])
-            .toFormat('wav')
             .on('error', reject)
             .on('end', () => resolve(outputPath))
             .save(outputPath);
     });
 }
+
 
 
 
