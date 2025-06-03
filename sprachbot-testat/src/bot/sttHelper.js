@@ -52,23 +52,33 @@ function convertToWav(inputPath) {
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir);
         }
+
         const outputPath = path.join(outputDir, `converted-${Date.now()}.wav`);
 
         ffmpeg(inputPath)
-            .outputOptions([
-                '-acodec pcm_s16le', 
-                '-ar 16000',         
-                '-ac 1'              
-            ])
-            .on('error', reject)
+            .audioCodec('pcm_s16le')  
+            .audioChannels(1)         
+            .audioFrequency(16000)    
+            .outputFormat('wav')       
+            .on('error', (err) => {
+                console.error('[FFmpeg] Conversion failed:', err.message);
+                reject(err);
+            })
             .on('end', () => {
                 const buffer = fs.readFileSync(outputPath);
-                console.log('Header:', buffer.slice(0, 12).toString('ascii')); // Should be RIFF...WAVE
+                const header = buffer.slice(0, 12).toString('ascii');
+                if (!header.startsWith('RIFF') || !header.includes('WAVE')) {
+                    console.warn('[FFmpeg] Output is NOT a valid WAV file.');
+                } else {
+                    console.log('[FFmpeg] Successfully produced valid WAV file.');
+                }
                 resolve(outputPath);
             })
             .save(outputPath);
     });
 }
+
+
 
 
 
