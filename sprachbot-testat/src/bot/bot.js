@@ -14,6 +14,7 @@ const SUPPORTED_AUDIO_TYPES = ['audio/wav', 'audio/x-wav', 'audio/ogg'];
 class EchoBot extends ActivityHandler {
     constructor(cluClient) {
         super();
+        this.user = new UserTO();
         this.cluClient = cluClient;
         this.requiredInformation = ["Vorname", "Nachname", "Geburtsdatum", "Land", "Stadt", "Straße", "Hausnummer", "Postleitzahl", "eMail", "Telefonnummer"];
         this.state = "awaitingInformation";
@@ -67,7 +68,6 @@ class EchoBot extends ActivityHandler {
         this.onMembersAdded(async (context, next) => {
             for (const member of context.activity.membersAdded) {
                 if (member.id !== context.activity.recipient.id) {
-                    this.user = new UserTO();
                     await sendVoiceReply(context, messages.welcomeMsg);
                     await this.askForInformation(context);
                 
