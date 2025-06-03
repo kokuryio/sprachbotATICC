@@ -55,15 +55,21 @@ function convertToWav(inputPath) {
         const outputPath = path.join(outputDir, `converted-${Date.now()}.wav`);
 
         ffmpeg(inputPath)
-            .format('wav')  // this is preferred over .toFormat()
+            .inputFormat('ogg') 
+            .format('wav')       
             .audioCodec('pcm_s16le')
             .audioChannels(1)
             .audioFrequency(16000)
             .on('error', reject)
-            .on('end', () => resolve(outputPath))
+            .on('end', () => {
+                const buffer = fs.readFileSync(outputPath);
+                console.log('Header:', buffer.slice(0, 12).toString('ascii'));
+                resolve(outputPath);
+            })
             .save(outputPath);
     });
 }
+
 
 
 

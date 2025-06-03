@@ -6,7 +6,7 @@ const botMessages = require('./botMessages');
 const { handleIncomingAudioAttachment } = require('./sttHelper');
 
 //supported audio types for user audio input
-const SUPPORTED_AUDIO_TYPES = ['audio/wav', 'audio/x-wav', 'audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/m4a'];
+const SUPPORTED_AUDIO_TYPES = ['audio/wav', 'audio/x-wav', 'audio/ogg'];
 
 /**
  * Contains the bot's conversational logic.
