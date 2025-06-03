@@ -89,7 +89,6 @@ async function transcribeSpeechFromFile(filePath) {
     if (!region) throw new Error('Missing SPEECH_REGION');
 
     const fileBuffer = fs.readFileSync(filePath);
-    console.log(fileBuffer.slice(0, 12).toString('ascii'));
     const audioConfig = sdk.AudioConfig.fromWavFileInput(fileBuffer);
     const speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, region);
     speechConfig.speechRecognitionLanguage = 'de-DE';
@@ -127,9 +126,11 @@ async function handleIncomingAudioAttachment(attachmentUrl, filename = 'user-inp
     let tempPath = path.resolve(__dirname, filename);
     await downloadAudioFile(attachmentUrl, tempPath);
 
-    if (path.extname(tempPath).toLowerCase() !== '.wav') {
+    const buffer = fs.readFileSync(tempPath);
+    const isWav = buffer.slice(0, 4).toString('ascii') === 'RIFF';
+
+    if (!isWav) {
         tempPath = await convertToWav(tempPath);
-        console.log("here conversion");
     }
 
     const transcribedText = await transcribeSpeechFromFile(tempPath);
