@@ -129,6 +129,7 @@ async function handleIncomingAudioAttachment(attachmentUrl, filename = 'user-inp
 
     if (path.extname(tempPath).toLowerCase() !== '.wav') {
         tempPath = await convertToWav(tempPath);
+        ConsoleLoggingListener.log("here conversion");
     }
 
     const transcribedText = await transcribeSpeechFromFile(tempPath);
