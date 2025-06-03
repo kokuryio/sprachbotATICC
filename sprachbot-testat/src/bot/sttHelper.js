@@ -43,7 +43,7 @@ async function downloadAudioFile(url, localPath) {
 
 /**
  * Converts an audio file input to .wav-format for further processing
- * @param {*} inputPath thepath to the file which to convert to .wav
+ * @param {*} inputPath the path to the file which to convert to .wav
  * @returns converted file
  */
 function convertToWav(inputPath) {
@@ -55,20 +55,21 @@ function convertToWav(inputPath) {
         const outputPath = path.join(outputDir, `converted-${Date.now()}.wav`);
 
         ffmpeg(inputPath)
-            .inputFormat('ogg') 
-            .format('wav')       
-            .audioCodec('pcm_s16le')
-            .audioChannels(1)
-            .audioFrequency(16000)
+            .outputOptions([
+                '-acodec pcm_s16le', 
+                '-ar 16000',         
+                '-ac 1'              
+            ])
             .on('error', reject)
             .on('end', () => {
                 const buffer = fs.readFileSync(outputPath);
-                console.log('Header:', buffer.slice(0, 12).toString('ascii'));
+                console.log('Header:', buffer.slice(0, 12).toString('ascii')); // Should be RIFF...WAVE
                 resolve(outputPath);
             })
             .save(outputPath);
     });
 }
+
 
 
 
