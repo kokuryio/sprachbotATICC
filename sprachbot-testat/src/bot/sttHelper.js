@@ -79,11 +79,8 @@ async function transcribeSpeechFromFile(filePath) {
     const region = process.env.SPEECH_REGION;
     if (!region) throw new Error('Missing SPEECH_REGION');
 
-    const pushStream = sdk.AudioInputStream.createPushStream();
-    pushStream.write(fs.readFileSync(filePath));
-    pushStream.close();
 
-    const audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
+    const audioConfig = sdk.AudioConfig.fromWavFileInput(fs.createReadStream(filePath));
     const speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, region);
     speechConfig.speechRecognitionLanguage = 'de-DE';
     const recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
