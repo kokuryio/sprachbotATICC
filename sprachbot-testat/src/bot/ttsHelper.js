@@ -70,7 +70,7 @@ async function sendVoiceReply(context, textReply, filePath = './bot-response.wav
             contentUrl: contentUrl
         };
 
-        await context.sendActivity(textReply); // Send readable text
+        await context.sendActivity({ text: textReply, textFormat: 'plain' }); // Send readable text
         await context.sendActivity(MessageFactory.attachment(attachment)); // Send voice response
     } catch (error) {
         console.error('Failed to send voice reply:', error);
