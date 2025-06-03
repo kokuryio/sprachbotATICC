@@ -68,7 +68,7 @@ function convertToWav(inputPath) {
                 const buffer = fs.readFileSync(outputPath);
                 const header = buffer.slice(0, 12).toString('ascii');
                 if (!header.startsWith('RIFF') || !header.includes('WAVE')) {
-                    console.warn('[FFmpeg] Output is NOT a valid WAV file.');
+                    console.log('[FFmpeg] Output is NOT a valid WAV file.');
                 } else {
                     console.log('[FFmpeg] Successfully produced valid WAV file.');
                 }
@@ -77,14 +77,6 @@ function convertToWav(inputPath) {
             .save(outputPath);
     });
 }
-
-
-
-
-
-
-
-
 
 /**
  * Transcribes an audio file to text
