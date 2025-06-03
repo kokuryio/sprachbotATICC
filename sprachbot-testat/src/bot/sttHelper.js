@@ -55,12 +55,10 @@ function convertToWav(inputPath) {
         const outputPath = path.join(outputDir, `converted-${Date.now()}.wav`);
 
         ffmpeg(inputPath)
-            .outputOptions([
-                '-f wav',            // ensure correct container
-                '-acodec pcm_s16le', // 16-bit PCM
-                '-ar 16000',         // 16 kHz sample rate
-                '-ac 1'              // mono
-            ])
+            .format('wav')  // this is preferred over .toFormat()
+            .audioCodec('pcm_s16le')
+            .audioChannels(1)
+            .audioFrequency(16000)
             .on('error', reject)
             .on('end', () => resolve(outputPath))
             .save(outputPath);
@@ -82,6 +80,7 @@ async function transcribeSpeechFromFile(filePath) {
     if (!region) throw new Error('Missing SPEECH_REGION');
 
     const fileBuffer = fs.readFileSync(filePath);
+    console.log(fileBuffer.slice(0, 12).toString('ascii'));
     const audioConfig = sdk.AudioConfig.fromWavFileInput(fileBuffer);
     const speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, region);
     speechConfig.speechRecognitionLanguage = 'de-DE';
