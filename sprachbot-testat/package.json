@@ -17,6 +17,7 @@
     },
     "dependencies": {
         "@azure/ai-language-conversations": "^1.0.0-beta.1",
+        "@azure/identity": "^4.10.0",
         "@azure/keyvault-secrets": "^4.9.0",
         "@ffmpeg-installer/ffmpeg": "^1.1.0",
         "@ffprobe-installer/ffprobe": "^2.1.2",

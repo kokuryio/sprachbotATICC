@@ -1,38 +1,28 @@
 const { DefaultAzureCredential } = require("@azure/identity");
-const { SecretClient } = require("@azure/keyvault-secrets");
 const knex = require("knex");
+const sql = require("mssql");
 
 /**
- * Retrieves database connection secrets from key vault and establishes DB
- * connection using knex.js
+ * Establishes a connection to Azure SQL DB using managed identity
  */
-const vaultName = process.env.KEY_VAULT_NAME;
-const keyVaultUrl = `https://${vaultName}.vault.azure.net`;
-
-const credential = new DefaultAzureCredential();
-const client = new SecretClient(keyVaultUrl, credential);
-
 async function createDbConnection() {
-  // Gather secrets from Key Vault
-  const dbUsernameSecret = await client.getSecret("database-user");
-  const dbPwdSecret = await client.getSecret("database-password");
-  const dbUsername = dbUsernameSecret.value;
-  const dbPwd = dbPwdSecret.value;
-
+  const credential = new DefaultAzureCredential();
   const serverName = process.env.DATABASE_SERVER_NAME;
   const databaseName = process.env.DATABASE_NAME;
+
+  // Get access token for Azure SQL
+  const accessToken = (await credential.getToken("https://database.windows.net/")).token;
 
   const db = knex({
     client: "mssql",
     connection: {
-      user: dbUsername,
-      password: dbPwd,
       server: `${serverName}.database.windows.net`,
       database: databaseName,
       options: {
         encrypt: true,
         enableArithAbort: true,
-      },
+        accessToken: accessToken
+      }
     },
     pool: {
       min: 2,
