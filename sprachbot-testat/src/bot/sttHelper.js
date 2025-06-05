@@ -134,6 +134,9 @@ async function handleIncomingAudioAttachment(attachmentUrl, filename = 'user-inp
     }
 
     const transcribedText = await transcribeSpeechFromFile(tempPath);
+    if(typeof transcribedText !== "string" || transcribedText === ""){
+        throw new error("Speech recognition returned no text.");
+    }
     return transcribedText;
 }
 
