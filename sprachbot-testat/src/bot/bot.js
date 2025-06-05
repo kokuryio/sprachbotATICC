@@ -33,6 +33,7 @@ class EchoBot extends ActivityHandler {
 
                 try {
                     var text = await handleIncomingAudioAttachment(audioAttachment.contentUrl);
+                    console.log(`Received ${text} as output from speach recognition`);
                 } catch (err) {
                     console.error(err);
                     await sendVoiceReply(context, botMessages.voiceTranscriptionError);
@@ -73,7 +74,6 @@ class EchoBot extends ActivityHandler {
                 if (member.id !== context.activity.recipient.id) {
                     await sendVoiceReply(context, messages.welcomeMsg);
                     await this.askForInformation(context);
-                
                 }
             }
             await next();
