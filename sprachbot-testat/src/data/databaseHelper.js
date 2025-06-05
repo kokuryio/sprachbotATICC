@@ -11,7 +11,7 @@ async function createDbConnection() {
     return connectionPool;
   }
   const credential = new DefaultAzureCredential();
-  const { token } = await credential.getToken("https://database.windows.net/");
+  const tokenResponse = await credential.getToken("https://database.windows.net/");
 
   connectionPool = await sql.connect({
     server: `${process.env.DATABASE_SERVER_NAME}.database.windows.net`,
@@ -21,7 +21,7 @@ async function createDbConnection() {
     },
     options: {
       encrypt: true,
-      accessToken: token // <- must be a string
+      token: tokenResponse.token
     }
 });
 
