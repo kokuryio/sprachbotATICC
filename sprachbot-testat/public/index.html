@@ -10,6 +10,7 @@
 <body class="bg-gray-100 text-gray-800 p-6">
   <h1 class="text-3xl font-bold mb-6">📊 User Dashboard</h1>
 
+  <!-- Metrics -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
     <div class="bg-white shadow rounded-lg p-4">
       <h2 class="text-xl font-semibold">Total Users</h2>
@@ -25,88 +26,114 @@
     </div>
   </div>
 
+  <!-- Chart -->
   <div class="bg-white p-4 rounded-lg shadow mb-6">
     <h2 class="text-xl font-semibold mb-4">Users by Country</h2>
     <canvas id="countryChart" height="120"></canvas>
   </div>
 
+  <!-- Table -->
   <div class="bg-white p-4 rounded-lg shadow overflow-x-auto">
-  <h2 class="text-xl font-semibold mb-4">All User Details</h2>
-  <table class="min-w-full table-auto text-sm text-left border">
-    <thead class="bg-gray-200">
-      <tr>
-        <th class="p-2">Vorname</th>
-        <th class="p-2">Nachname</th>
-        <th class="p-2">Geburtsdatum</th>
-        <th class="p-2">Land</th>
-        <th class="p-2">Stadt</th>
-        <th class="p-2">Straße</th>
-        <th class="p-2">Hausnummer</th>
-        <th class="p-2">PLZ</th>
-        <th class="p-2">E-Mail</th>
-        <th class="p-2">Telefon</th>
-        <th class="p-2">Erstellt am</th>
-      </tr>
-    </thead>
-    <tbody id="userTable" class="divide-y divide-gray-100">
-    </tbody>
-  </table>
-</div>
+    <h2 class="text-xl font-semibold mb-4">All User Details</h2>
 
+    <!-- Search -->
+    <div class="mb-4">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="🔍 Search by name..."
+        class="w-full md:w-1/3 px-4 py-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+      />
+    </div>
+
+    <table class="min-w-full table-auto text-sm text-left border">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="p-2">Vorname</th>
+          <th class="p-2">Nachname</th>
+          <th class="p-2">Geburtsdatum</th>
+          <th class="p-2">Land</th>
+          <th class="p-2">Stadt</th>
+          <th class="p-2">Straße</th>
+          <th class="p-2">Hausnummer</th>
+          <th class="p-2">PLZ</th>
+          <th class="p-2">E-Mail</th>
+          <th class="p-2">Telefon</th>
+          <th class="p-2">Erstellt am</th>
+        </tr>
+      </thead>
+      <tbody id="userTable" class="divide-y divide-gray-100">
+      </tbody>
+    </table>
+  </div>
 
   <script>
-    // Simulated API response
+    let users = [];
+
     fetch('/api/users')
       .then(res => res.json())
-      .then(users => {
-        const total = users.length;
-        const avgAge = Math.round(
-          users.reduce((sum, u) => sum + getAge(u.Geburtsdatum), 0) / total
-        );
-        const latest = users
-          .map(u => new Date(u.Erstellungsdatum))
-          .sort((a, b) => b - a)[0]
-          .toLocaleDateString();
-
-        document.getElementById('totalUsers').textContent = total;
-        document.getElementById('avgAge').textContent = avgAge + ' years';
-        document.getElementById('latest').textContent = latest;
-
-        // Fill table
-        const tbody = document.getElementById('userTable');
-    users.forEach(user => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td class="p-2">${user.Vorname}</td>
-        <td class="p-2">${user.Nachname}</td>
-        <td class="p-2">${formatDate(user.Geburtsdatum)}</td>
-        <td class="p-2">${user.Land}</td>
-        <td class="p-2">${user.Stadt}</td>
-        <td class="p-2">${user.Straße}</td>
-        <td class="p-2">${user.Hausnummer}</td>
-        <td class="p-2">${user.Postleitzahl}</td>
-        <td class="p-2">${user.eMail}</td>
-        <td class="p-2">${user.Telefonnummer || '-'}</td>
-        <td class="p-2">${formatDateTime(user.Erstellungsdatum)}</td>
-    `;
-    tbody.appendChild(tr);
-    });
-
-        // Country chart
-        const counts = {};
-        users.forEach(u => counts[u.Land] = (counts[u.Land] || 0) + 1);
-        new Chart(document.getElementById('countryChart'), {
-          type: 'bar',
-          data: {
-            labels: Object.keys(counts),
-            datasets: [{
-              label: 'Users per Country',
-              data: Object.values(counts),
-              backgroundColor: 'rgba(99, 102, 241, 0.6)'
-            }]
-          }
-        });
+      .then(data => {
+        users = data;
+        renderUserTable();
+        updateDashboard(users);
       });
+
+    function renderUserTable(filter = '') {
+      const tbody = document.getElementById('userTable');
+      tbody.innerHTML = '';
+
+      const filteredUsers = users.filter(user => {
+        const name = `${user.Vorname} ${user.Nachname}`.toLowerCase();
+        return name.includes(filter.toLowerCase());
+      });
+
+      filteredUsers.forEach(user => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2">${user.Vorname}</td>
+          <td class="p-2">${user.Nachname}</td>
+          <td class="p-2">${formatDate(user.Geburtsdatum)}</td>
+          <td class="p-2">${user.Land}</td>
+          <td class="p-2">${user.Stadt}</td>
+          <td class="p-2">${user.Straße}</td>
+          <td class="p-2">${user.Hausnummer}</td>
+          <td class="p-2">${user.Postleitzahl}</td>
+          <td class="p-2">${user.eMail}</td>
+          <td class="p-2">${user.Telefonnummer || '-'}</td>
+          <td class="p-2">${formatDateTime(user.Erstellungsdatum)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateDashboard(users) {
+      const total = users.length;
+      const avgAge = Math.round(
+        users.reduce((sum, u) => sum + getAge(u.Geburtsdatum), 0) / total
+      );
+      const latest = users
+        .map(u => new Date(u.Erstellungsdatum))
+        .sort((a, b) => b - a)[0]
+        .toLocaleDateString();
+
+      document.getElementById('totalUsers').textContent = total;
+      document.getElementById('avgAge').textContent = avgAge + ' years';
+      document.getElementById('latest').textContent = latest;
+
+      const counts = {};
+      users.forEach(u => counts[u.Land] = (counts[u.Land] || 0) + 1);
+      new Chart(document.getElementById('countryChart'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{
+            label: 'Users per Country',
+            data: Object.values(counts),
+            backgroundColor: 'rgba(99, 102, 241, 0.6)'
+          }]
+        }
+      });
+    }
 
     function getAge(dateString) {
       const birth = new Date(dateString);
@@ -122,14 +149,17 @@
     }
 
     function formatDate(dateStr) {
-        return new Date(dateStr).toLocaleDateString();
+      return new Date(dateStr).toLocaleDateString();
     }
 
     function formatDateTime(dateStr) {
-        const d = new Date(dateStr);
-        return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+      const d = new Date(dateStr);
+      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
     }
 
+    document.getElementById('searchInput').addEventListener('input', e => {
+      renderUserTable(e.target.value);
+    });
   </script>
 </body>
 </html>
