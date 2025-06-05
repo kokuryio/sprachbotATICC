@@ -3,6 +3,7 @@
  */
 
 const path = require('path');
+const fs = require('fs');
 
 const dotenv = require('dotenv');
 // Import required bot configuration.
@@ -100,4 +101,24 @@ server.on('upgrade', async (req, socket, head) => {
 
     await streamingAdapter.process(req, socket, head, (context) => myBot.run(context));
 });
+
+//Load user dashboard
+server.get('/', (req, res, next) => {
+  fs.readFile(path.join(__dirname, 'public', 'index.html'), (err, data) => {
+    if (err) {
+      res.send(500, 'Error loading dashboard');
+    } else {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(data);
+    }
+    return next();
+  });
+});
+
+//Send users to dashboard
+server.get('/api/users', async (req, res) => {
+    const dataManager = require('./data/dataManager');
+    res.send(await dataManager.getUsers());
+});
+
 

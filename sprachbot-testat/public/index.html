@@ -1,0 +1,110 @@
+<!-- Dashboard to provide insights about generated users from the bot -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 p-6">
+  <h1 class="text-3xl font-bold mb-6">📊 User Dashboard</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white shadow rounded-lg p-4">
+      <h2 class="text-xl font-semibold">Total Users</h2>
+      <p id="totalUsers" class="text-3xl mt-2">0</p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-4">
+      <h2 class="text-xl font-semibold">Average Age</h2>
+      <p id="avgAge" class="text-3xl mt-2">0</p>
+    </div>
+    <div class="bg-white shadow rounded-lg p-4">
+      <h2 class="text-xl font-semibold">Latest Registration</h2>
+      <p id="latest" class="text-3xl mt-2">-</p>
+    </div>
+  </div>
+
+  <div class="bg-white p-4 rounded-lg shadow mb-6">
+    <h2 class="text-xl font-semibold mb-4">Users by Country</h2>
+    <canvas id="countryChart" height="120"></canvas>
+  </div>
+
+  <div class="bg-white p-4 rounded-lg shadow">
+    <h2 class="text-xl font-semibold mb-4">User Table</h2>
+    <table class="min-w-full table-auto text-sm text-left">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="p-2">Name</th>
+          <th class="p-2">Email</th>
+          <th class="p-2">City</th>
+          <th class="p-2">Birthdate</th>
+        </tr>
+      </thead>
+      <tbody id="userTable" class="divide-y divide-gray-100">
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // Simulated API response
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(users => {
+        const total = users.length;
+        const avgAge = Math.round(
+          users.reduce((sum, u) => sum + getAge(u.Geburtsdatum), 0) / total
+        );
+        const latest = users
+          .map(u => new Date(u.Erstellungsdatum))
+          .sort((a, b) => b - a)[0]
+          .toLocaleDateString();
+
+        document.getElementById('totalUsers').textContent = total;
+        document.getElementById('avgAge').textContent = avgAge + ' years';
+        document.getElementById('latest').textContent = latest;
+
+        // Fill table
+        const tbody = document.getElementById('userTable');
+        users.forEach(user => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="p-2">${user.Vorname} ${user.Nachname}</td>
+            <td class="p-2">${user.eMail}</td>
+            <td class="p-2">${user.Stadt}</td>
+            <td class="p-2">${new Date(user.Geburtsdatum).toLocaleDateString()}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Country chart
+        const counts = {};
+        users.forEach(u => counts[u.Land] = (counts[u.Land] || 0) + 1);
+        new Chart(document.getElementById('countryChart'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(counts),
+            datasets: [{
+              label: 'Users per Country',
+              data: Object.values(counts),
+              backgroundColor: 'rgba(99, 102, 241, 0.6)'
+            }]
+          }
+        });
+      });
+
+    function getAge(dateString) {
+      const birth = new Date(dateString);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      if (
+        today.getMonth() < birth.getMonth() ||
+        (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
+      ) {
+        age--;
+      }
+      return age;
+    }
+  </script>
+</body>
+</html>
