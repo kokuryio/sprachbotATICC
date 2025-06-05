@@ -4,6 +4,8 @@ const { DefaultAzureCredential } = require('@azure/identity');
 const { SecretClient } = require('@azure/keyvault-secrets');
 const { MessageFactory } = require('botbuilder');
 const path = require('path');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 
 /**
  * Synthesizes text to speech and writes the result to a file manually using a PushAudioOutputStream
@@ -58,15 +60,17 @@ async function synthesizeSpeechToFile(text, filePath) {
  */
 async function sendVoiceReply(context, textReply, filePath = './bot-response.wav') {
     try {
+        const oggPath = './bot-response.ogg'
         const synthesizedPath = await synthesizeSpeechToFile(textReply, filePath);
+        const compressedPath = await compressAudio(synthesizedPath, oggPath);
 
         const fileBuffer = fs.readFileSync(synthesizedPath);
         const base64Audio = fileBuffer.toString('base64');
         const contentUrl = `data:audio/wav;base64,${base64Audio}`;
 
         const attachment = {
-            name: 'bot-response.wav',
-            contentType: 'audio/wav',
+            name: 'bot-response.ogg',
+            contentType: 'audio/ogg',
             contentUrl: contentUrl
         };
 
@@ -76,6 +80,25 @@ async function sendVoiceReply(context, textReply, filePath = './bot-response.wav
         console.error('Failed to send voice reply:', error);
         await context.sendActivity(`Fehler beim Generieren der Sprachantwort: ${error.message}`);
     }
+}
+
+/**
+ * Compresses the audio to a .ogg-File to send longer voice replies
+ * @param {*} inputPath path to audio to compress
+ * @param {*} outputPath path to resulting audio
+ * @returns Promise which resolves in saving the audio file to output path
+ */
+function compressAudio(inputPath, outputPath) {
+    return new Promise((resolve, reject) => {
+        ffmpeg(inputPath)
+            .audioCodec('libopus')
+            .audioBitrate('32k')
+            .format('ogg')
+            .outputOptions(['-vn']) 
+            .on('end', () => resolve(outputPath))
+            .on('error', reject)
+            .save(outputPath);
+    });
 }
 
 /**
