@@ -1,36 +1,42 @@
 const { DefaultAzureCredential } = require("@azure/identity");
-const knex = require("knex");
 const sql = require("mssql");
+
+let connectionPool;
 
 /**
  * Establishes a connection to Azure SQL DB using managed identity
  */
 async function createDbConnection() {
-  const credential = new DefaultAzureCredential();
-  const serverName = process.env.DATABASE_SERVER_NAME;
-  const databaseName = process.env.DATABASE_NAME;
+  if (connectionPool) {
+    return connectionPool;
+  }
 
-  // Get access token for Azure SQL
+  const credential = new DefaultAzureCredential();
   const accessToken = (await credential.getToken("https://database.windows.net/")).token;
 
-  const db = knex({
-    client: "mssql",
-    connection: {
-      server: `${serverName}.database.windows.net`,
-      database: databaseName,
-      options: {
-        encrypt: true,
-        enableArithAbort: true,
-        accessToken: accessToken
-      }
+  connectionPool = await sql.connect({
+    server: `${process.env.DATABASE_SERVER_NAME}.database.windows.net`,
+    database: process.env.DATABASE_NAME,
+    authentication: {
+      type: 'azure-active-directory-access-token'
     },
-    pool: {
-      min: 2,
-      max: 10,
-    },
+    options: {
+      encrypt: true,
+      accessToken: accessToken
+    }
   });
 
-  return db;
+  return connectionPool;
 }
 
-module.exports = createDbConnection;
+async function closeDbConnection() {
+  if (connectionPool) {
+    await connectionPool.close();
+    connectionPool = null;
+  }
+}
+
+module.exports = {
+  createDbConnection,
+  closeDbConnection
+};
