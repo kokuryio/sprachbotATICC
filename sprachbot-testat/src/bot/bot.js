@@ -4,6 +4,9 @@ const UserTO = require('../data/UserTO');
 const { sendVoiceReply } = require('./ttsHelper');
 const botMessages = require('./botMessages');
 const { handleIncomingAudioAttachment } = require('./sttHelper');
+const validator = require('validator');
+const countries = require("i18n-iso-countries");
+
 
 //supported audio types for user audio input
 const SUPPORTED_AUDIO_TYPES = ['audio/wav', 'audio/x-wav', 'audio/ogg'];
@@ -159,9 +162,12 @@ class EchoBot extends ActivityHandler {
         const entityValue = extractEntityValue(entities, relevantInformation, context);
 
         this.currentInput = entityValue;
-        this.state = "awaitingConfirmation";
-
-        await sendVoiceReply(context, messages.repeatInput(entityValue, currentInformation));
+        if(this.verifyInputFormat()){
+            this.state = "awaitingConfirmation";
+            await sendVoiceReply(context, messages.repeatInput(entityValue, currentInformation));
+        }else{
+           await this.clarifyInputFormat(context);
+        }
     }
 
     /**
@@ -179,6 +185,86 @@ class EchoBot extends ActivityHandler {
         const currentInformation = this.requiredInformation[0];
         this.state = "awaitingInformation";
         await sendVoiceReply(context, messages.askForInformation(currentInformation));
+    }
+
+    /**
+     * Checks if the current given input is valid in format
+     * @returns true if input is valid
+     */
+    verifyInputFormat(){
+        switch(this.requiredInformation[0]){
+            case "Vorname":
+                return true;
+
+            case "Nachname":
+                return true;
+            
+            case "Geburtsdatum":
+                return this.checkBirthDateFormat();
+            
+            case "Stadt":
+                return true;
+
+            case "Straße":
+                return true;
+
+            case "Postleitzahl":
+                return this.checkPostCode();
+
+            case "Land":
+                return this.checkCountry();
+
+            case "eMail":
+                return this.checkMail();
+
+            case "Hausnummer":
+                return this.checkHouseNumber();
+
+            case "Telefonnummer":
+                return this.checkPhoneNumber();
+        }
+    }
+
+    /**
+     * Informs the user about the correct input format.
+     * @param context Bot context needed for responding
+     */
+    async clarifyInputFormat(context){
+        if(this.requiredInformation[0] === "Geburtsdatum"){
+            await sendVoiceReply(context, botMessages.clarifyBirthDate);
+        }else{
+            await sendVoiceReply(context, botMessages.clarifyInput(this.currentInput, this.requiredInformation[0]));
+        }
+    }
+
+//--------------VALIDATOR FUNCTIONS------------------------------------------------//
+    checkBirthDateFormat(){
+        return validator.isDate(this.currentInput);
+    }
+
+    checkPostCode(){
+        return validator.isPostalCode(this.currentInput, "DE");
+    }
+
+    checkCountry(){
+        countries.registerLocale(require("i18n-iso-countries/langs/de.json"));
+        const countryNamesDe = countries.getNames("de");
+          return Object.values(countryNamesDe).some(
+            name => name.toLowerCase() === this.currentInput.trim().toLowerCase()
+            );
+    }
+
+    checkMail(){
+        return validator.isEmail(this.currentInput);
+    }
+
+    checkHouseNumber(){
+        const houseNumberRegex = /^\d{1,4}([\-\/]?\d{1,3})?([ ]?[a-zA-Z])?$/;
+        return houseNumberRegex.test(this.currentInput);
+    }
+
+    checkPhoneNumber(){
+        return validator.isMobilePhone(this.currentInput, "de-DE");
     }
 }
 
