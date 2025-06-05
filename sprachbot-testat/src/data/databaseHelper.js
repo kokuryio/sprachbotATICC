@@ -17,11 +17,13 @@ async function createDbConnection() {
     server: `${process.env.DATABASE_SERVER_NAME}.database.windows.net`,
     database: process.env.DATABASE_NAME,
     authentication: {
-      type: 'azure-active-directory-access-token'
+      type: 'azure-active-directory-access-token',
+      options: {
+          token: tokenResponse.token,
+      },
     },
     options: {
       encrypt: true,
-      token: tokenResponse.token
     }
 });
 
