@@ -6,6 +6,63 @@ const { MessageFactory } = require('botbuilder');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+ffmpeg.setFfprobePath(ffprobeInstaller.path);
+
+const MAX_BYTES = 25600;
+
+/**
+ * Split a file into smaller chunks, each under MAX_BYTES
+ * @param {string} inputPath - path to compressed .ogg
+ * @returns {Promise<string[]>} - array of chunk file paths
+ */
+async function splitAudioBySize(inputPath) {
+    const chunksDir = path.join(path.dirname(inputPath), 'chunks');
+    fs.mkdirSync(chunksDir, { recursive: true });
+
+    const stats = fs.statSync(inputPath);
+    const totalSize = stats.size;
+    const numChunks = Math.ceil(totalSize / MAX_BYTES);
+
+    const chunkPaths = [];
+
+    // Estimate duration of input file to split proportionally
+    const duration = await getAudioDuration(inputPath);
+
+    for (let i = 0; i < numChunks; i++) {
+        const startTime = (i * duration) / numChunks;
+        const outputPath = path.join(chunksDir, `chunk_${i}.ogg`);
+        chunkPaths.push(outputPath);
+
+        await new Promise((resolve, reject) => {
+            ffmpeg(inputPath)
+                .seekInput(startTime)
+                .duration(duration / numChunks)
+                .outputOptions(['-c:a libopus', '-b:a 32k'])
+                .output(outputPath)
+                .on('end', resolve)
+                .on('error', reject)
+                .run();
+        });
+    }
+
+    return chunkPaths;
+}
+
+/**
+ * Get audio duration in seconds
+ * @param {string} filePath
+ * @returns {Promise<number>}
+ */
+function getAudioDuration(filePath) {
+    return new Promise((resolve, reject) => {
+        ffmpeg.ffprobe(filePath, (err, metadata) => {
+            if (err) return reject(err);
+            resolve(metadata.format.duration);
+        });
+    });
+}
 
 /**
  * Synthesizes text to speech and writes the result to a file manually using a PushAudioOutputStream
@@ -58,24 +115,47 @@ async function synthesizeSpeechToFile(text, filePath) {
  * @param {string} textReply Text to convert and send
  * @param {string} filePath Optional file path (default: './bot-response.wav')
  */
-async function sendVoiceReply(context, textReply, filePath = './bot-response.wav') {
+async function sendVoiceReply(context, textReply, wavPath = './bot-response.wav', oggPath = './bot-response.ogg') {
     try {
-        const oggPath = './bot-response.ogg'
-        const synthesizedPath = await synthesizeSpeechToFile(textReply, filePath);
+        const synthesizedPath = await synthesizeSpeechToFile(textReply, wavPath);
         const compressedPath = await compressAudio(synthesizedPath, oggPath);
 
-        const fileBuffer = fs.readFileSync(synthesizedPath);
-        const base64Audio = fileBuffer.toString('base64');
-        const contentUrl = `data:audio/wav;base64,${base64Audio}`;
+        const fileSize = fs.statSync(compressedPath).size;
 
-        const attachment = {
-            name: 'bot-response.ogg',
-            contentType: 'audio/ogg',
-            contentUrl: contentUrl
-        };
+        await context.sendActivity({ text: textReply, textFormat: 'plain' }); 
 
-        await context.sendActivity({ text: textReply, textFormat: 'plain' }); // Send readable text
-        await context.sendActivity(MessageFactory.attachment(attachment)); // Send voice response
+        if (fileSize <= MAX_BYTES) {
+            // Send single file
+            const buffer = fs.readFileSync(compressedPath);
+            const base64Audio = buffer.toString('base64');
+            const contentUrl = `data:audio/ogg;base64,${base64Audio}`;
+
+            const attachment = {
+                name: path.basename(compressedPath),
+                contentType: 'audio/ogg',
+                contentUrl
+            };
+
+            await context.sendActivity(MessageFactory.attachment(attachment));
+        } else {
+            // Too large — split into smaller chunks
+            const chunkPaths = await splitAudioBySize(compressedPath);
+
+            for (const chunkPath of chunkPaths) {
+                const buffer = fs.readFileSync(chunkPath);
+                const base64Audio = buffer.toString('base64');
+                const contentUrl = `data:audio/ogg;base64,${base64Audio}`;
+
+                const attachment = {
+                    name: path.basename(chunkPath),
+                    contentType: 'audio/ogg',
+                    contentUrl
+                };
+
+                await context.sendActivity(MessageFactory.attachment(attachment));
+            }
+        }
+
     } catch (error) {
         console.error('Failed to send voice reply:', error);
         await context.sendActivity(`Fehler beim Generieren der Sprachantwort: ${error.message}`);
