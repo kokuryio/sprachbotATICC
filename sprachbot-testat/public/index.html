@@ -30,21 +30,29 @@
     <canvas id="countryChart" height="120"></canvas>
   </div>
 
-  <div class="bg-white p-4 rounded-lg shadow">
-    <h2 class="text-xl font-semibold mb-4">User Table</h2>
-    <table class="min-w-full table-auto text-sm text-left">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="p-2">Name</th>
-          <th class="p-2">Email</th>
-          <th class="p-2">City</th>
-          <th class="p-2">Birthdate</th>
-        </tr>
-      </thead>
-      <tbody id="userTable" class="divide-y divide-gray-100">
-      </tbody>
-    </table>
-  </div>
+  <div class="bg-white p-4 rounded-lg shadow overflow-x-auto">
+  <h2 class="text-xl font-semibold mb-4">All User Details</h2>
+  <table class="min-w-full table-auto text-sm text-left border">
+    <thead class="bg-gray-200">
+      <tr>
+        <th class="p-2">Vorname</th>
+        <th class="p-2">Nachname</th>
+        <th class="p-2">Geburtsdatum</th>
+        <th class="p-2">Land</th>
+        <th class="p-2">Stadt</th>
+        <th class="p-2">Straße</th>
+        <th class="p-2">Hausnummer</th>
+        <th class="p-2">PLZ</th>
+        <th class="p-2">E-Mail</th>
+        <th class="p-2">Telefon</th>
+        <th class="p-2">Erstellt am</th>
+      </tr>
+    </thead>
+    <tbody id="userTable" class="divide-y divide-gray-100">
+    </tbody>
+  </table>
+</div>
+
 
   <script>
     // Simulated API response
@@ -66,16 +74,23 @@
 
         // Fill table
         const tbody = document.getElementById('userTable');
-        users.forEach(user => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td class="p-2">${user.Vorname} ${user.Nachname}</td>
-            <td class="p-2">${user.eMail}</td>
-            <td class="p-2">${user.Stadt}</td>
-            <td class="p-2">${new Date(user.Geburtsdatum).toLocaleDateString()}</td>
-          `;
-          tbody.appendChild(tr);
-        });
+    users.forEach(user => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td class="p-2">${user.Vorname}</td>
+        <td class="p-2">${user.Nachname}</td>
+        <td class="p-2">${formatDate(user.Geburtsdatum)}</td>
+        <td class="p-2">${user.Land}</td>
+        <td class="p-2">${user.Stadt}</td>
+        <td class="p-2">${user.Straße}</td>
+        <td class="p-2">${user.Hausnummer}</td>
+        <td class="p-2">${user.Postleitzahl}</td>
+        <td class="p-2">${user.eMail}</td>
+        <td class="p-2">${user.Telefonnummer || '-'}</td>
+        <td class="p-2">${formatDateTime(user.Erstellungsdatum)}</td>
+    `;
+    tbody.appendChild(tr);
+    });
 
         // Country chart
         const counts = {};
@@ -105,6 +120,16 @@
       }
       return age;
     }
+
+    function formatDate(dateStr) {
+        return new Date(dateStr).toLocaleDateString();
+    }
+
+    function formatDateTime(dateStr) {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+    }
+
   </script>
 </body>
 </html>
