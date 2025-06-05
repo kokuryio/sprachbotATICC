@@ -7,7 +7,7 @@ async function getUsers() {
   try {
     const db = await createDbConnection();
     const result = await db.request()
-      .query('SELECT UserId, Vorname, eMail FROM Users ORDER BY UserId');
+      .query('SELECT * FROM Users ORDER BY UserId');
 
     console.log(result.recordset);
     return result.recordset;
