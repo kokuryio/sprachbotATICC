@@ -33,7 +33,7 @@ class EchoBot extends ActivityHandler {
 
                 try {
                     var text = await handleIncomingAudioAttachment(audioAttachment.contentUrl);
-                    console.log(`Received ${text} as output from speach recognition`);
+                    context.activity.text = text; //set this for fallback purposes later
                 } catch (err) {
                     console.error(err);
                     await sendVoiceReply(context, botMessages.voiceTranscriptionError);
@@ -162,8 +162,6 @@ class EchoBot extends ActivityHandler {
         const entityValue = extractEntityValue(entities, relevantInformation, context);
 
         this.currentInput = entityValue;
-        console.log("Input to be checked for format: ");
-        console.log(this.currentInput);
         if(this.verifyInputFormat()){
             this.state = "awaitingConfirmation";
             await sendVoiceReply(context, messages.repeatInput(entityValue, currentInformation));
