@@ -117,8 +117,9 @@ async function synthesizeSpeechToFile(text, filePath) {
  */
 async function sendVoiceReply(context, textReply, wavPath = './bot-response.wav', oggPath = './bot-response.ogg') {
     try {
+        const spokenText = expandNumbersForSpeech(textReply);
         const synthesizedPath = await synthesizeSpeechToFile(textReply, wavPath);
-        const compressedPath = await compressAudio(synthesizedPath, oggPath);
+        const compressedPath = await compressAudio(spokenText, oggPath);
 
         const fileSize = fs.statSync(compressedPath).size;
 
@@ -202,5 +203,24 @@ async function retrieveSpeechKey() {
         throw new Error('Could not retrieve speech key from Azure Key Vault');
     }
 }
+
+/**
+ * Expands numbers to digit-by-digit for TTS, except for year-like values (e.g., 1990, 2023).
+ * @param {string} input
+ * @returns {string} text to read out aloud
+ */
+function expandNumbersForSpeech(input) {
+    return input.replace(/\d+/g, num => {
+        const n = parseInt(num, 10);
+
+        // Skip expansion if it's a year between 1900 and 2099
+        if (n >= 1900 && n <= 2099) return num;
+
+        // Otherwise, expand digits with spaces (e.g., 123 → "1 2 3")
+        return num.split('').join(' ');
+    });
+}
+
+
 
 module.exports = { sendVoiceReply };
