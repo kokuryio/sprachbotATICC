@@ -6,6 +6,7 @@ const botMessages = require('./botMessages');
 const { handleIncomingAudioAttachment } = require('./sttHelper');
 const validator = require('validator');
 const countries = require("i18n-iso-countries");
+const { DateTime } = require("luxon");
 
 
 //supported audio types for user audio input
@@ -33,6 +34,7 @@ class EchoBot extends ActivityHandler {
 
                 try {
                     var text = await handleIncomingAudioAttachment(audioAttachment.contentUrl);
+                    text = text.trim().replace(/\.$/, "");
                     context.activity.text = text; //set this for fallback purposes later
                 } catch (err) {
                     console.error(err);
@@ -239,7 +241,13 @@ class EchoBot extends ActivityHandler {
 
 //--------------VALIDATOR FUNCTIONS------------------------------------------------//
     checkBirthDateFormat(){
-        return validator.isDate(this.currentInput);
+        const parsedDate = parseBirthDateFromLangauageInput(this.currentInput);
+        if(validator.isDate(parsedDate)){
+            this.currentInput = parsedDate;
+            return true;
+        }else{
+            return false;
+        }
     }
 
     checkPostCode(){
@@ -285,6 +293,22 @@ function extractEntityValue(entities, category, context) {
         text = entity.text;
     }
     return text;
+}
+
+/**
+ * Parses dates from natural german language into required format
+ * @param {*} inputDate date in natural language (German)
+ */
+function parseBirthDateFromLangauageInput(inputDate){
+    const parsedDate = DateTime.fromFormat(inputDate, "d. MMMM yyyy", { locale: "de" });
+
+    if (parsedDate.isValid) {
+        const isoDate = parsedDate.toISODate();
+        return isoDate;
+    } else {
+        console.log("Invalid date:", parsedDate.invalidExplanation);
+        return null;
+    }
 }
 
 /**
