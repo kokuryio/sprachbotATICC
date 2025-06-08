@@ -118,8 +118,8 @@ async function synthesizeSpeechToFile(text, filePath) {
 async function sendVoiceReply(context, textReply, wavPath = './bot-response.wav', oggPath = './bot-response.ogg') {
     try {
         const spokenText = expandNumbersForSpeech(textReply);
-        const synthesizedPath = await synthesizeSpeechToFile(textReply, wavPath);
-        const compressedPath = await compressAudio(spokenText, oggPath);
+        const synthesizedPath = await synthesizeSpeechToFile(spokenText, wavPath);
+        const compressedPath = await compressAudio(synthesizedPath, oggPath);
 
         const fileSize = fs.statSync(compressedPath).size;
 
