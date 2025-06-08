@@ -162,6 +162,8 @@ class EchoBot extends ActivityHandler {
         const entityValue = extractEntityValue(entities, relevantInformation, context);
 
         this.currentInput = entityValue;
+        console.log("Input to be checked for format: ");
+        console.log(this.currentInput);
         if(this.verifyInputFormat()){
             this.state = "awaitingConfirmation";
             await sendVoiceReply(context, messages.repeatInput(entityValue, currentInformation));
