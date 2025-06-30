@@ -327,9 +327,8 @@ function saveUserInput(input, category, user) {
  */
 async function createUser(user){
     const dataManager = require('../data/dataManager');
-    dataManager.insertUser(user);
-    dataManager.getUsers();
-    dataManager.destroyDb();
+    await dataManager.insertUser(user);
+    await dataManager.destroyDb();
 }
 
 module.exports = { EchoBot };
