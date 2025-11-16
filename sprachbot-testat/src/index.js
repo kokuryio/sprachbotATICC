@@ -22,9 +22,6 @@ const {
 // This bot's main dialog.
 const { EchoBot } = require('./bot/bot');
 
-//Creates CLU client
-const { createCLUClient } = require('./bot/cluHelper');
-
 
 // Create HTTP server
 const server = restify.createServer();
@@ -69,16 +66,15 @@ const onTurnErrorHandler = async (context, error) => {
     await context.sendActivity('To continue to run this bot, please fix the bot source code.');
 };
 
+
 // Set the onTurnError for the singleton CloudAdapter.
 adapter.onTurnError = onTurnErrorHandler;
 
 let myBot;  // declare in outer scope
 
 (async () => {
-    const cluClient = await createCLUClient();
-    myBot = new EchoBot(cluClient);  // assign here
+    myBot = new EchoBot();
 })();
-
 // Listen for incoming requests.
 server.post('/api/messages', async (req, res) => {
     if (!myBot) {

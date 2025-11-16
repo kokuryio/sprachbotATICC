@@ -10,43 +10,28 @@ const { DateTime } = require("luxon");
  * Contains the bot's conversational logic.
  */
 class EchoBot extends ActivityHandler {
-    constructor(cluClient) {
+        constructor() {
         super();
         this.user = new UserTO();
-        this.cluClient = cluClient;
         this.requiredInformation = ["Vorname", "Nachname", "Geburtsdatum", "Land", "Stadt", "Straße", "Hausnummer", "Postleitzahl", "eMail", "Telefonnummer"];
         this.state = "awaitingInformation";
         this.currentInput = null;
 
+        // Keywords for confirmation/rejection
+        this.confirmationKeywords = ["ja", "das stimmt", "stimmt", "richtig", "korrekt"];
+        this.rejectionKeywords = ["nein", "das stimmt nicht", "falsch", "nicht korrekt"];
+
         this.onMessage(async (context, next) => {
             const text = context.activity.text || "";
 
-            const result = await this.cluClient.analyzeConversation({
-                kind: "Conversation",
-                analysisInput: {
-                    conversationItem: {
-                        id: "1",
-                        participantId: "user",
-                        text: text
-                    },
-                    modality: "text",
-                    language: "de"
-                },
-                parameters: {
-                    projectName: process.env.CLU_PROJECT_NAME,
-                    deploymentName: process.env.CLU_DEPLOYMENT_NAME,
-                    stringIndexType: "Utf16CodeUnit"
-                }
-            });
-
-            const topIntent = result.result.prediction.topIntent;
-            const entities = result.result.prediction.entities;
-
+            // Detect intent and create entities locally
+            const { topIntent, entities } = this.detectIntentAndEntities(text);
             await this.processUserMessage(topIntent, entities, context);
+
             await next();
         });
 
-        //Send welcome text messages
+        // Send welcome text messages
         this.onMembersAdded(async (context, next) => {
             for (const member of context.activity.membersAdded) {
                 if (member.id !== context.activity.recipient.id) {
@@ -56,6 +41,26 @@ class EchoBot extends ActivityHandler {
             }
             await next();
         });
+    }
+
+    /**
+     * Detects intent and generates entities
+     */
+    detectIntentAndEntities(text) {
+        const entities = [];
+
+        if (this.confirmationKeywords.some(word => text.includes(word))) {
+            entities.push({ category: "confirm", text });
+            return { topIntent: "confirmation", entities };
+        }
+
+        if (this.rejectionKeywords.some(word => text.includes(word))) {
+            entities.push({ category: "reject", text });
+            return { topIntent: "confirmation", entities };
+        }
+
+        // Default: entering information
+        return { topIntent: "enterInformation", entities };
     }
 
     async processUserMessage(topIntent, entities, context) {
@@ -172,9 +177,7 @@ class EchoBot extends ActivityHandler {
     }
 
     checkBirthDateFormat(){
-        const parsedDate = parseBirthDateFromLangauageInput(this.currentInput);
-        if(validator.isDate(parsedDate)){
-            this.currentInput = parsedDate;
+        if(validator.isDate(this.currentInput)){
             return true;
         }else{
             return false;
@@ -212,10 +215,6 @@ function extractEntityValue(entities, category, context) {
     return entity ? entity.text : context.activity.text;
 }
 
-function parseBirthDateFromLangauageInput(inputDate){
-    const parsedDate = DateTime.fromFormat(inputDate, "d. MMMM yyyy", { locale: "de" });
-    return parsedDate.isValid ? parsedDate.toISODate() : null;
-}
 
 function saveUserInput(input, category, user) {
     user[category] = input;
@@ -225,6 +224,23 @@ async function createUser(user){
     const dataManager = require('../data/dataManager');
     await dataManager.insertUser(user);
     await dataManager.destroyDb();
+}
+
+/**
+ * Maps AWS Lex slots to expected entity array format
+ * @param {*} slots Lex slots object
+ * @returns entities array with { category, text } structure
+ */
+function mapLexSlotsToEntities(slots) {
+    const entities = [];
+    if (!slots) return entities;
+
+    for (const [key, value] of Object.entries(slots)) {
+        if (value && value.trim() !== '') {
+            entities.push({ category: key, text: value });
+        }
+    }
+    return entities;
 }
 
 module.exports = { EchoBot };
