@@ -1,32 +1,30 @@
-const { DefaultAzureCredential } = require("@azure/identity");
-const sql = require("mssql");
+const { SecretsManagerClient, GetSecretValueCommand } = require("@aws-sdk/client-secrets-manager");
+const mysql = require("mysql2/promise");
+
+const client = new SecretsManagerClient({ region: "eu-central-1" });
 
 let connectionPool;
 
 /**
- * Establishes a connection to Azure SQL DB using managed identity
+ * Establishes a connection to AWS mysql db
  */
 async function createDbConnection() {
-  if (connectionPool) {
+   if (connectionPool) {
     return connectionPool;
   }
-  const credential = new DefaultAzureCredential();
-  const tokenResponse = await credential.getToken("https://database.windows.net/");
 
-  connectionPool = await sql.connect({
-    server: `${process.env.DATABASE_SERVER_NAME}.database.windows.net`,
-    database: process.env.DATABASE_NAME,
-    authentication: {
-      type: 'azure-active-directory-access-token',
-      options: {
-          token: tokenResponse.token,
-      },
-    },
-    options: {
-      encrypt: true,
-    }
-});
+  const secrets = await getSecret(process.env.DB_SECRET_NAME);
 
+  connectionPool = await mysql.createPool({
+    host: secrets.host,
+    user: secrets.username,
+    password: secrets.password,
+    database: secrets.dbname,
+    port: secrets.port,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+  });
 
   return connectionPool;
 }
@@ -38,7 +36,26 @@ async function closeDbConnection() {
   }
 }
 
-module.exports = {
+async function getSecret(secretName) {
+  try {
+    const command = new GetSecretValueCommand({ SecretId: secretName });
+    const response = await client.send(command);
+
+    if ("SecretString" in response) {
+      return JSON.parse(response.SecretString);        
+    } else {
+      const buff = Buffer.from(response.SecretBinary, "base64");
+      return buff.toString("ascii");
+    }
+  } catch (err) {
+    console.error("Error fetching secret:", err);
+    throw err;
+  }
+}
+
+const databaseHelper = {
   createDbConnection,
   closeDbConnection
 };
+
+module.exports = databaseHelper;

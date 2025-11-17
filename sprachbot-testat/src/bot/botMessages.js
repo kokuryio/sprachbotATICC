@@ -13,8 +13,6 @@ module.exports ={
     confirmSave: "Vielen Dank, Ihre Angabe wurde gespeichert.",
     internalError: "Das habe Ich leider nicht verstanden. ",
     endOfProcess: "Vielen Dank, Ihr Account wurde erstellt.",
-    voiceTranscriptionError: "Fehler bei der Spracherkennung",
-    wrongAudioFormat: 'Bitte senden Sie eine Audiodatei im WAV-Format.',
     clarifyInput: (input, information) => `${input} ist leider keine korrekte Eingabe für ${information}. Bitte geben Sie einen korrekten Wert für ${information} an.`,
     clarifyBirthDate: "Bitte geben Sie ihr Geburtsdatum im Format JJJJ-MM-TT an."
 };

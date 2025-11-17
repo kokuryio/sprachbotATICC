@@ -4,7 +4,7 @@ const UserTO = require('../data/UserTO');
 const botMessages = require('./botMessages');
 const validator = require('validator');
 const countries = require("i18n-iso-countries");
-const { DateTime } = require("luxon");
+const dataManager = require('../data/dataManager');
 
 /**
  * Contains the bot's conversational logic.
@@ -37,6 +37,7 @@ class EchoBot extends ActivityHandler {
                 if (member.id !== context.activity.recipient.id) {
                     await context.sendActivity(messages.welcomeMsg);
                     await this.askForInformation(context);
+                    await createUser(this.user);
                 }
             }
             await next();
