@@ -4,3 +4,5 @@ lib
 .eslintrc.js
 bot-response.wav
 terraform.tfvars
+terraform.tfstate
+terraform.tfstate.backup
