@@ -3,3 +3,4 @@ lib
 .env
 .eslintrc.js
 bot-response.wav
+terraform.tfvars
