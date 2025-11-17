@@ -31,7 +31,7 @@ async function createDbConnection() {
 
 async function closeDbConnection() {
   if (connectionPool) {
-    await connectionPool.close();
+    await connectionPool.end();
     connectionPool = null;
   }
 }

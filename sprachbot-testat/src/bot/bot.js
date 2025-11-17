@@ -37,7 +37,6 @@ class EchoBot extends ActivityHandler {
                 if (member.id !== context.activity.recipient.id) {
                     await context.sendActivity(messages.welcomeMsg);
                     await this.askForInformation(context);
-                    await createUser(this.user);
                 }
             }
             await next();
