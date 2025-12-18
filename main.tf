@@ -137,3 +137,78 @@ resource "aws_db_instance" "mysql" {
     aws_security_group.db_sg.id
   ]
 }
+
+# -------------------------------
+# EC2 instance profile
+# -------------------------------
+resource "aws_iam_role" "eb_ec2_role" {
+  name = "aws-elasticbeanstalk-ec2-role"
+  assume_role_policy = data.aws_iam_policy_document.eb_ec2_assume_role.json
+}
+
+data "aws_iam_policy_document" "eb_ec2_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "eb_web_tier" {
+  role       = aws_iam_role.eb_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier"
+}
+
+resource "aws_iam_role_policy_attachment" "eb_s3" {
+  role       = aws_iam_role.eb_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+}
+
+resource "aws_iam_instance_profile" "eb_ec2_profile" {
+  name = aws_iam_role.eb_ec2_role.name
+  role = aws_iam_role.eb_ec2_role.name
+}
+
+# -------------------------------
+# S3 Bucket
+# -------------------------------
+resource "aws_s3_bucket" "eb_bucket" {
+  bucket = "sbregistry"
+  force_destroy = true
+}
+
+# -------------------------------
+# Elastic Beanstalk
+# -------------------------------
+resource "aws_elastic_beanstalk_application" "bot_app" {
+  name = "speachbot-testat"
+}
+
+resource "aws_elastic_beanstalk_application_version" "bot_version" {
+  name        = "v1"
+  application = aws_elastic_beanstalk_application.bot_app.name
+  bucket      = aws_s3_bucket.eb_bucket.bucket
+  key         = "speachbot.zip"
+}
+
+resource "aws_elastic_beanstalk_environment" "bot_env" {
+  name                = "my-bot-env"
+  application         = aws_elastic_beanstalk_application.bot_app.name
+  solution_stack_name = "64bit Amazon Linux 2023 v6.7.1 running Node.js 22"
+  version_label       = aws_elastic_beanstalk_application_version.bot_version.name
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "NODE_ENV"
+    value     = "production"
+  }
+
+  setting {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name      = "IamInstanceProfile"
+    value     = "aws-elasticbeanstalk-ec2-role" 
+  }
+}

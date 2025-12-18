@@ -4,7 +4,7 @@
     "description": "Have a conversation with users to make a user account",
     "author": "Generated using Microsoft Bot Builder Yeoman generator v4.22.1",
     "license": "MIT",
-    "main": "index.js",
+    "main": "src/index.js",
     "scripts": {
         "start": "node src/index.js",
         "watch": "nodemon ./index.js",
@@ -16,10 +16,7 @@
         "url": "https://github.com"
     },
     "dependencies": {
-        "@azure/ai-language-conversations": "^1.0.0-beta.1",
-        "@azure/identity": "^4.10.0",
-        "@azure/keyvault-secrets": "^4.9.0",
-        "@ffmpeg-installer/ffmpeg": "^1.1.0",
+        "@aws-sdk/client-secrets-manager": "^3.494.0",
         "@ffprobe-installer/ffprobe": "^2.1.2",
         "axios": "^1.9.0",
         "botbuilder": "~4.22.1",
@@ -28,7 +25,6 @@
         "i18n-iso-countries": "^7.14.0",
         "knex": "^3.1.0",
         "luxon": "^3.6.1",
-        "microsoft-cognitiveservices-speech-sdk": "^1.44.0",
         "mssql": "^11.0.1",
         "mysql2": "^3.15.3",
         "restify": "~11.1.0",
