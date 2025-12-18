@@ -47,5 +47,5 @@ jobs:
       - name: Update Elastic Beanstalk environment
         run: |
           aws elasticbeanstalk update-environment \
-            --environment-name speachbot-env \
+            --environment-name my-bot-env \
             --version-label v${{ github.run_number }}
