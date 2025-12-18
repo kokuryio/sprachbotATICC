@@ -43,7 +43,7 @@ jobs:
         run: |
           aws elasticbeanstalk create-application-version \
             --application-name speachbot-testat \
-            --version-label v1 \
+            --version-label v${{ github.run_number }} \
             --source-bundle S3Bucket=sbregistry,S3Key=app-${{ github.run_number }}.zip
 
       - name: Update Elastic Beanstalk environment
