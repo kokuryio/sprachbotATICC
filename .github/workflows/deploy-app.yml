@@ -19,7 +19,7 @@ jobs:
       # Install dependencies to ensure they're valid
       - name: Install dependencies
         run: |
-          cd "${ github.workspace }/sprachbot-testat"
+          cd sprachbot-testat
           npm ci
 
       - name: Zip source
