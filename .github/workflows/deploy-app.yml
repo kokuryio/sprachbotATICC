@@ -18,7 +18,9 @@ jobs:
 
       # Install dependencies to ensure they're valid
       - name: Install dependencies
-        run: npm ci
+        run: |
+          cd ${ github.workspace }
+          npm ci
 
       - name: Zip source
         run: |
