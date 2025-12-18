@@ -36,6 +36,7 @@ jobs:
 
       - name: Upload to S3
         run: |
+          cd sprachbot-testat
           aws s3 cp app.zip s3://sbregistry/app-${{ github.run_number }}.zip
 
       - name: Create Elastic Beanstalk application version
