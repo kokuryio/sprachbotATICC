@@ -24,6 +24,7 @@ jobs:
 
       - name: Zip source
         run: |
+          cd sprachbot-testat
           zip -r app.zip . -x "node_modules/*" "node_modules/**" ".env"
 
       - name: Configure AWS credentials
@@ -41,7 +42,7 @@ jobs:
         run: |
           aws elasticbeanstalk create-application-version \
             --application-name speachbot-testat \
-            --version-label v${{ github.run_number }} \
+            --version-label v1 \
             --source-bundle S3Bucket=sbregistry,S3Key=app-${{ github.run_number }}.zip
 
       - name: Update Elastic Beanstalk environment
