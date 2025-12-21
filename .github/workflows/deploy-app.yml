@@ -29,6 +29,7 @@ jobs:
 
       - name: Prepare deployment ZIP
         run: |
+          cd sprachbot-testat
           zip -r app.zip dist package.json
 
       - name: Configure AWS credentials
