@@ -24,6 +24,7 @@ jobs:
 
       - name: Build with Webpack
         run: |
+          cd sprachbot-testat
           npm run build
 
       - name: Prepare deployment ZIP
