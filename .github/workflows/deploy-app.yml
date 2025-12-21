@@ -22,10 +22,13 @@ jobs:
           cd sprachbot-testat
           npm ci
 
-      - name: Zip source
+      - name: Build with Webpack
         run: |
-          cd sprachbot-testat
-          zip -r app.zip . -x "node_modules/*" "node_modules/**" ".env"
+          npm run build
+
+      - name: Prepare deployment ZIP
+        run: |
+          zip -r app.zip dist package.json
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2

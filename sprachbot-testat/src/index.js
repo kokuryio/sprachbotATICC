@@ -100,7 +100,7 @@ server.on('upgrade', async (req, socket, head) => {
 
 //Load user dashboard
 server.get('/', (req, res, next) => {
-  fs.readFile(path.join(__dirname, '..', 'public', 'index.html'), (err, data) => {
+  fs.readFile(path.join(__dirname, '..', 'dist', 'index.html'), (err, data) => {
     if (err) {
       console.log(err);
       res.send(500, 'Error loading dashboard');
